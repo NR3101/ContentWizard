@@ -44,9 +44,6 @@ const OutputSection = ({ aiOutput }: { aiOutput: string }) => {
         initialValue="Your AI Generated Content will appear here...."
         useCommandShortcut={true}
         ref={editorRef}
-        // onChange={() =>
-        //   console.log(editorRef.current.getInstance().getMarkdown())
-        // }
       />
     </div>
   );

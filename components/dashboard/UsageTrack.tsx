@@ -10,67 +10,62 @@ import { HISTORY } from "@/app/dashboard/history/page";
 import { TotalUsageContext } from "@/contexts/TotalUsageContext";
 import { UserSubscriptionContext } from "@/contexts/UserSubscriptionContext";
 import Link from "next/link";
+import { UpdateCreditUsageContext } from "@/contexts/UpdateCreditUsageContext";
 
 const UsageTrack = () => {
-  const [maxUsage, setMaxUsage] = useState(10000);
+  const { user } = useUser();
   const { totalUsage, setTotalUsage } = useContext(TotalUsageContext);
   const { isUserSubscribed, setIsUserSubscribed } = useContext(
     UserSubscriptionContext
   );
-  const { user } = useUser();
+  const [maxUsage, setMaxUsage] = useState(10000);
+  const { updateCreditUsage } = useContext(UpdateCreditUsageContext);
 
-  //useEffect to get data and check if user is subscribed when user is available
+  // useEffect to get the data from the database and check if the user is subscribed
   useEffect(() => {
-    if (user) {
-      getData();
-      isCurrentUserSubscribed();
-    }
+    user && getData();
+    user && isCurrentUserSubscribe();
   }, [user]);
 
-  //Function to get data from the database and calculate total usage
+  //useEffect to get the data from the database and check if the user is subscribed
+  useEffect(() => {
+    user && getData();
+  }, [updateCreditUsage && user]);
+
+  //function to get the data from the database
   const getData = async () => {
-    try {
-      const email = user?.primaryEmailAddress?.emailAddress;
-      if (!email) return;
+    const result = (await db
+      .select()
+      .from(AIOutput)
+      .where(
+        eq(AIOutput.createdBy, user?.primaryEmailAddress?.emailAddress!)
+      )) as HISTORY[];
 
-      const result = (await db
-        .select()
-        .from(AIOutput)
-        .where(eq(AIOutput.createdBy, email))) as HISTORY[];
+    getTotalUsage(result);
+  };
 
-      getTotalUsage(result);
-    } catch (error) {
-      console.error("Failed to get data", error);
+  //function to check if the current user is subscribed
+  const isCurrentUserSubscribe = async () => {
+    const result = await db
+      .select()
+      .from(userSubscriptions)
+      .where(
+        eq(userSubscriptions.email, user?.primaryEmailAddress?.emailAddress!)
+      );
+    if (result.length > 0) {
+      setIsUserSubscribed(true);
+      setMaxUsage(100000);
     }
   };
 
-  //Function to calculate total usage from the data fetched from the database
+  //function to get the total usage of the user
   const getTotalUsage = (result: HISTORY[]) => {
-    const total = result.reduce(
-      (acc, item) => acc + Number(item.aiResponse?.length || 0),
-      0
-    );
+    let total: number = 0;
+    result.forEach((element) => {
+      total = total + Number(element.aiResponse?.length);
+    });
+
     setTotalUsage(total);
-  };
-
-  //Function to check if the current user is subscribed or not by checking the userSubscriptions table in the database using the user's email address
-  const isCurrentUserSubscribed = async () => {
-    try {
-      const email = user?.primaryEmailAddress?.emailAddress;
-      if (!email) return;
-
-      const result = await db
-        .select()
-        .from(userSubscriptions)
-        .where(eq(userSubscriptions.email, email));
-
-      if (result.length > 0) {
-        setIsUserSubscribed(true);
-        setMaxUsage(100000);
-      }
-    } catch (error) {
-      console.error("Failed to check subscription status", error);
-    }
   };
 
   return (

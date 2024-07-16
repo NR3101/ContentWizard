@@ -62,7 +62,6 @@ export default function UpgradePage() {
       name: "ContentWizard",
       description: "Monthly Subscription",
       handler: async (resp: any) => {
-        console.log(resp);
         if (resp) {
           saveSubscriptionToDB(resp.razorpay_payment_id);
         }
@@ -89,7 +88,6 @@ export default function UpgradePage() {
       joinDate: moment().format("DD/MM/YYYY"),
     });
 
-    console.log(result);
 
     if (result) {
       window.location.reload();
