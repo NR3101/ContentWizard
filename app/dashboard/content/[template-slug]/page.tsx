@@ -75,7 +75,7 @@ export default function CreateNewContentPage(props: PROPS) {
       if (totalUsage + contentGenerationCost >= 10000 && !isUserSubscribed) {
         router.push("/dashboard/upgrade");
         return toast({
-          title: "Insufficient credits after content generation.",
+          title: "You don't have enough credits to generate this content.",
           description: "Please upgrade to continue using the app.",
           variant: "destructive",
         });
